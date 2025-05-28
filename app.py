@@ -20,16 +20,24 @@ data_source = st.sidebar.radio("Select data source", ["Default", "Manual Upload"
 if data_source == "Manual Upload":
     uploaded_file = st.sidebar.file_uploader("Upload Excel File", type=["xlsx"])
     if uploaded_file:
-        xls = pd.ExcelFile(uploaded_file, engine="openpyxl")
-        sheet_names = xls.sheet_names
-        selected_sheet = st.sidebar.selectbox("Select Sheet", sheet_names)
-        df = pd.read_excel(xls, sheet_name=selected_sheet, engine="openpyxl")
+        try:
+            xls = pd.ExcelFile(uploaded_file, engine="openpyxl")
+            sheet_names = xls.sheet_names
+            selected_sheet = st.sidebar.selectbox("Select Sheet", sheet_names)
+            df = pd.read_excel(xls, sheet_name=selected_sheet, engine="openpyxl")
+        except Exception as e:
+            st.error("Failed to read file. Please check format.")
+            st.stop()
     else:
         st.warning("Please upload an Excel file to proceed.")
         st.stop()
 else:
     st.sidebar.info("Using default dataset.")
-    df = load_default_data()
+    try:
+        df = load_default_data()
+    except Exception as e:
+        st.error("Failed to load default dataset.")
+        st.stop()
 
 metrics = ["Usage Frequency (per week)", "Logins (last 30 days)",
            "Support Ticket Responses", "Feature Adoption Rate (%)", "CSM Engagement Score (1-10)"]
@@ -92,9 +100,47 @@ fig4 = px.bar(plan_dist, x="Plan", y="Count", color="Health Status", barmode="st
               color_discrete_map={"Healthy": "green", "At-Risk": "orange", "Critical": "red"})
 st.plotly_chart(fig4, use_container_width=True)
 
-st.subheader("Preview Filtered Customer Data")
+# Univariate Analysis
+st.header("Univariate Analysis (Preview Data)")
+uni_var = st.selectbox("Select a column for univariate analysis", filtered_df.select_dtypes(include='number').columns, key="uni_preview")
+fig_uni_hist = px.histogram(filtered_df, x=uni_var, nbins=30, title=f"Histogram of {uni_var}")
+st.plotly_chart(fig_uni_hist, use_container_width=True)
+
+fig_uni_box = px.box(filtered_df, y=uni_var, title=f"Boxplot of {uni_var}")
+st.plotly_chart(fig_uni_box, use_container_width=True)
+
+# Bivariate Analysis
+st.header("Bivariate Analysis (Preview Data)")
+biv_x = st.selectbox("X-axis variable", filtered_df.select_dtypes(include='number').columns, key="biv_x_preview")
+biv_y = st.selectbox("Y-axis variable", filtered_df.select_dtypes(include='number').columns, key="biv_y_preview")
+
+fig_biv = px.scatter(filtered_df, x=biv_x, y=biv_y, color="Health Status", 
+                     hover_data=["Customer ID", "Industry", "Plan"],
+                     title=f"{biv_x} vs {biv_y}",
+                     color_discrete_map={"Healthy": "green", "At-Risk": "orange", "Critical": "red"})
+st.plotly_chart(fig_biv, use_container_width=True)
+
+# Multivariate Analysis
+st.header("Multivariate Analysis (Preview Data)")
+multivariate_cols = filtered_df.select_dtypes(include='number').columns.tolist()
+
+if len(multivariate_cols) > 1:
+    corr_matrix_preview = filtered_df[multivariate_cols].corr()
+    fig_corr_preview = px.imshow(
+        corr_matrix_preview,
+        text_auto=True,
+        color_continuous_scale="RdBu_r",
+        title="Correlation Heatmap (Preview Data)",
+        width=1000,
+        height=800
+    )
+    st.plotly_chart(fig_corr_preview, use_container_width=True)
+else:
+    st.warning("Not enough numeric columns for multivariate analysis.")
+
+st.header("Preview Filtered Customer Data")
 st.dataframe(filtered_df, use_container_width=True)
 
-st.subheader("Export Filtered Data")
+st.header("Export Filtered Data")
 csv_data = filtered_df.to_csv(index=False).encode("utf-8")
 st.download_button("Download as CSV", data=csv_data, file_name="filtered_customers.csv", mime="text/csv")
