@@ -143,7 +143,7 @@ customer_health_dashboard/
 │   └── customer_health_dashboard_demo/  # Power BI demo assets 
 ├── dataset/
 │   ├── customer_metrics.xlsx      # Cleaned dataset
-│   └── intern_assignment/         # Supplementary files or resources
+│   └── intern_assignment/         # Supplementary files
 ├── README.md                      # Project documentation
 
 ````
