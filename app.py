@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-st.set_page_config(page_title="dataset\Customer_Health_Score.xlsx", layout="wide")
+st.set_page_config(page_title="Customer_Health_Score", layout="wide")
 st.title("Customer Health Dashboard")
 
 def normalize_column(col):
@@ -12,7 +12,7 @@ def normalize_column(col):
 
 @st.cache_data
 def load_default_data():
-    return pd.read_excel("Customer_Health_Score.xlsx", sheet_name=0, engine="openpyxl")
+    return pd.read_excel("dataset/Customer_Health_Score.xlsx", sheet_name=0, engine="openpyxl")
 
 st.sidebar.header("Data Source Selection")
 data_source = st.sidebar.radio("Select data source", ["Default", "Manual Upload"])
