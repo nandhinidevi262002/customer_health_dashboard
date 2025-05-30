@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-st.set_page_config(page_title="Customer Health Dashboard", layout="wide")
+st.set_page_config(page_title="dataset\Customer_Health_Score.xlsx", layout="wide")
 st.title("Customer Health Dashboard")
 
 def normalize_column(col):
